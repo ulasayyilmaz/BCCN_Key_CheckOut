@@ -6,6 +6,14 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import openpyxl
 
+# STEP 3 ADDED: Imports for PDF generation
+import base64
+import io
+import traceback
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+
 app = Flask(__name__)
 CORS(app)
 
@@ -57,6 +65,55 @@ def get_next_index_and_write(row_data):
             
         return next_index
 
+# STEP 3 ADDED: PDF Generation function
+def generate_pdf(index, data, checkout_time):
+    try:
+        pdf_dir = "pdfs"
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir)
+            
+        safe_name = data['name'].replace(" ", "_")
+        pdf_filename = f"{index}_{safe_name}.pdf"
+        pdf_path = os.path.join(pdf_dir, pdf_filename)
+        
+        c = canvas.Canvas(pdf_path, pagesize=letter)
+        width, height = letter
+        
+        # Header
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(50, height - 50, "BCCN Berlin — Key Checkout Form")
+        c.setLineWidth(0.5)
+        c.line(50, height - 60, width - 50, height - 60)
+        
+        # Fields
+        c.setFont("Helvetica", 12)
+        c.drawString(50, height - 100, f"Record #: {index}")
+        c.drawString(50, height - 120, f"Name: {data['name']}")
+        c.drawString(50, height - 140, f"Student ID: {data['student_id']}")
+        c.drawString(50, height - 160, f"Key ID: {data['key_id']}")
+        c.drawString(50, height - 180, f"Purpose: {data['purpose']}")
+        c.drawString(50, height - 200, f"Checkout Time: {checkout_time}")
+        
+        # Signature
+        c.drawString(50, height - 240, "Signature:")
+        
+        # Decode signature
+        img_data = base64.b64decode(data['signature_b64'])
+        img_io = io.BytesIO(img_data)
+        img = ImageReader(img_io)
+        c.drawImage(img, 50, height - 400, width=300, height=150, mask='auto')
+        
+        # Footer
+        c.setFont("Helvetica", 10)
+        c.setFillColorRGB(0.5, 0.5, 0.5)
+        c.drawString(50, 50, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — Record {index}")
+        
+        c.save()
+        return pdf_filename
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        traceback.print_exc()
+        return None
 
 # flask is listening to local server,
 # whenever http request posted, it receives the data 
@@ -94,6 +151,22 @@ def submit():
         # gets index and writes to excel file
         next_index = get_next_index_and_write(row_data)
         print("Done. Row index:", next_index)
+        
+        # STEP 3 ADDED: Generate PDF and update Excel
+        pdf_filename = generate_pdf(next_index, data, checkout_time)
+        if pdf_filename:
+            try:
+                with file_lock:
+                    workbook = openpyxl.load_workbook(EXCEL_FILE)
+                    sheet = workbook.active
+                    # Find the row and update PDF Filename (column 8)
+                    for row in range(sheet.max_row, 1, -1):
+                        if sheet.cell(row=row, column=1).value == next_index:
+                            sheet.cell(row=row, column=8).value = pdf_filename
+                            break
+                    workbook.save(EXCEL_FILE)
+            except Exception as e:
+                print(f"Error updating Excel with PDF filename: {e}")
         
         # returns json of the data with index
         return jsonify({"success": True, "index": next_index}), 200

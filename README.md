@@ -65,3 +65,6 @@ ngrok static website: sequence-tackling-eccentric.ngrok-free.dev is the ngrok se
 
 //command run to start ngrok server
 ngrok http --url=sequence-tackling-eccentric.ngrok-free.dev 5000
+
+pip install reportlab
+pip install flask flask-cors openpyxl 

@@ -1,0 +1,19 @@
+# Excel data file — contains student personal data
+key_checkout/checkouts.xlsx
+
+# Signature PDFs — contain student signatures
+key_checkout/pdfs/*
+
+# Keep the pdfs/ folder itself in the repo
+!key_checkout/pdfs/.gitkeep
+
+# Python virtual environment
+key_checkout/key_checkout_env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS system files
+.DS_Store
