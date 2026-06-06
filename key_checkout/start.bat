@@ -32,7 +32,26 @@ echo Do not close this window while the office is open.
 echo When you see 'Forwarding' below, the system is ready.
 echo ================================================
 
+REM Kill any stale process already holding port 5000
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000 " ^| findstr "LISTENING"') do (
+    echo Cleaning up stale process on port 5000 (PID %%a)...
+    taskkill /PID %%a /F >nul 2>&1
+)
+timeout /t 1 /nobreak >nul
+
+REM Start Flask and capture its PID
 start /B python app.py
-timeout /t 2 /nobreak > nul
+timeout /t 2 /nobreak >nul
+
+REM Get Flask PID (last python process on port 5000)
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000 " ^| findstr "LISTENING"') do set FLASK_PID=%%a
 
 ngrok http --url=sequence-tackling-eccentric.ngrok-free.dev 5000
+
+REM ngrok has exited — shut down Flask cleanly
+if defined FLASK_PID (
+    echo Shutting down Flask (PID %FLASK_PID%)...
+    taskkill /PID %FLASK_PID% /F >nul 2>&1
+    echo Flask stopped. Goodbye.
+)
+pause

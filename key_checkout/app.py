@@ -17,7 +17,8 @@ from reportlab.lib.utils import ImageReader
 app = Flask(__name__)
 CORS(app)
 
-EXCEL_FILE = "/checkouts.xlsx"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+EXCEL_FILE = os.path.join(BASE_DIR, "checkouts.xlsx")
 HEADER = ["Index", "Name", "Student ID", "Key ID", "Purpose", "Checkout Time", "Check-in Time", "PDF Filename"]
 
 # Global lock for file operations and index assignment
@@ -68,7 +69,7 @@ def get_next_index_and_write(row_data):
 # STEP 3 ADDED: PDF Generation function
 def generate_pdf(index, data, checkout_time):
     try:
-        pdf_dir = "pdfs"
+        pdf_dir = os.path.join(BASE_DIR, "pdfs")
         if not os.path.exists(pdf_dir):
             os.makedirs(pdf_dir)
             
@@ -175,4 +176,5 @@ def submit():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, use_reloader=False, port=5000)
+
