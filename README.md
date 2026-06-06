@@ -53,3 +53,15 @@ Write in plain, non-technical language. Include:
 4. `key_checkout/generate_qr.py`
 5. `key_checkout/README.md`
 6. `netlify-form/index.html`
+
+
+
+
+
+public netlify url: 
+imaginative-boba-7db2a1.netlify.app
+
+ngrok static website: sequence-tackling-eccentric.ngrok-free.dev is the ngrok server pointing to localhost
+
+//command run to start ngrok server
+ngrok http --url=sequence-tackling-eccentric.ngrok-free.dev 5000

@@ -9,7 +9,7 @@ import openpyxl
 app = Flask(__name__)
 CORS(app)
 
-EXCEL_FILE = "checkouts.xlsx"
+EXCEL_FILE = "../checkouts.xlsx"
 HEADER = ["Index", "Name", "Student ID", "Key ID", "Purpose", "Checkout Time", "Check-in Time", "PDF Filename"]
 
 # Global lock for file operations and index assignment
@@ -90,8 +90,10 @@ def submit():
             ""   # PDF Filename
         ]
         
+        print("Writing to Excel...")
         # gets index and writes to excel file
         next_index = get_next_index_and_write(row_data)
+        print("Done. Row index:", next_index)
         
         # returns json of the data with index
         return jsonify({"success": True, "index": next_index}), 200
