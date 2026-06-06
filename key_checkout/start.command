@@ -32,9 +32,17 @@ echo "================================================"
 # Kill any stale process already holding port 5000
 STALE=$(lsof -ti :5000)
 if [ -n "$STALE" ]; then
-    echo "Cleaning up stale process on port 5000 (PID $STALE)..."
-    kill -9 $STALE 2>/dev/null
-    sleep 1
+    STALE_CMD=$(ps -p "$STALE" -o args= 2>/dev/null)
+    if echo "$STALE_CMD" | grep -q "key_checkout" && echo "$STALE_CMD" | grep -q "app.py"; then
+        echo "Cleaning up stale key_checkout Flask process on port 5000 (PID $STALE)..."
+        kill -9 $STALE 2>/dev/null
+        sleep 1
+    else
+        echo "ERROR: Port 5000 is already in use by a different process (PID $STALE)."
+        echo "       Command: $STALE_CMD"
+        echo "       Please free port 5000 manually before starting the Key Checkout system."
+        exit 1
+    fi
 fi
 
 # Start Flask and remember its PID

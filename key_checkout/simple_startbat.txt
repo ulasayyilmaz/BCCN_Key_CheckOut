@@ -1,5 +1,4 @@
 @echo off
-setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 
 python --version >nul 2>&1
@@ -35,30 +34,8 @@ echo ================================================
 
 REM Kill any stale process already holding port 5000
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000 " ^| findstr "LISTENING"') do (
-    set STALE_PID=%%a
-)
-if defined STALE_PID (
-    REM Check if the process command line belongs to key_checkout/app.py
-    for /f "tokens=*" %%c in ('wmic process where "ProcessId=%STALE_PID%" get CommandLine /value 2^>nul ^| findstr "CommandLine"') do set STALE_CMD=%%c
-    echo !STALE_CMD! | findstr /i "key_checkout" >nul 2>&1
-    if !errorlevel! equ 0 (
-        echo !STALE_CMD! | findstr /i "app.py" >nul 2>&1
-        if !errorlevel! equ 0 (
-            echo Cleaning up stale key_checkout Flask process on port 5000 ^(PID %STALE_PID%^)...
-            taskkill /PID %STALE_PID% /F >nul 2>&1
-        ) else (
-            echo ERROR: Port 5000 is in use by a different process ^(PID %STALE_PID%^).
-            echo        Please free port 5000 manually before starting the Key Checkout system.
-            pause
-            exit /b
-        )
-    ) else (
-        echo ERROR: Port 5000 is in use by a different process ^(PID %STALE_PID%^).
-        echo        Please free port 5000 manually before starting the Key Checkout system.
-        pause
-        exit /b
-    )
-    set STALE_PID=
+    echo Cleaning up stale process on port 5000 (PID %%a)...
+    taskkill /PID %%a /F >nul 2>&1
 )
 timeout /t 1 /nobreak >nul
 
