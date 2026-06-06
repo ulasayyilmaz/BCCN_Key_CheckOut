@@ -17,7 +17,7 @@ from reportlab.lib.utils import ImageReader
 app = Flask(__name__)
 CORS(app)
 
-EXCEL_FILE = "../checkouts.xlsx"
+EXCEL_FILE = "/checkouts.xlsx"
 HEADER = ["Index", "Name", "Student ID", "Key ID", "Purpose", "Checkout Time", "Check-in Time", "PDF Filename"]
 
 # Global lock for file operations and index assignment
